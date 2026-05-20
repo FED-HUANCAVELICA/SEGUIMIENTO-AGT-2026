@@ -294,15 +294,10 @@ async function cargarDatos() {
   if(btn) btn.classList.add('spinning');
   document.getElementById('error-box').style.display = 'none';
   try {
-    const url = API_URL + (API_URL.includes('?') ? '&' : '?') + 'callback=__cb&t=' + Date.now();
-    const json = await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      window.__cb = (data) => { delete window.__cb; document.head.removeChild(s); resolve(data); };
-      s.onerror = () => reject(new Error('load'));
-      s.src = url;
-      document.head.appendChild(s);
-      setTimeout(() => reject(new Error('timeout')), 15000);
-    });
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(API_URL);
+    const res = await fetch(proxyUrl);
+    const wrapper = await res.json();
+    const json = JSON.parse(wrapper.contents);
     if (!json.ok || !json.regiones) throw new Error();
     DATA = json.regiones.sort((a,b) => b.pct - a.pct);
     document.getElementById('loading').style.display = 'none';
