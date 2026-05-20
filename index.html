@@ -269,7 +269,7 @@ footer{text-align:center;margin-top:28px;padding-top:18px;border-top:1px solid v
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbw2kC87KnEx__FWia67zYchgCSbDmzVs7K5vyWXd3SI8UKvZm-GtqRqsl20MiBVBNedyA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyhHDGfv2681ZrBsDVYF8LEqEazgccsijcNaZ6Eu9TC3YdeMUg3YNtE0xjEvlR84H8Tqg/exec';
 let DATA = [], filtro = 'todas';
 const chartInstances = {};
 
@@ -294,8 +294,15 @@ async function cargarDatos() {
   if(btn) btn.classList.add('spinning');
   document.getElementById('error-box').style.display = 'none';
   try {
-    const res = await fetch(API_URL);
-    const json = await res.json();
+    const url = API_URL + (API_URL.includes('?') ? '&' : '?') + 'callback=__cb&t=' + Date.now();
+    const json = await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      window.__cb = (data) => { delete window.__cb; document.head.removeChild(s); resolve(data); };
+      s.onerror = () => reject(new Error('load'));
+      s.src = url;
+      document.head.appendChild(s);
+      setTimeout(() => reject(new Error('timeout')), 15000);
+    });
     if (!json.ok || !json.regiones) throw new Error();
     DATA = json.regiones.sort((a,b) => b.pct - a.pct);
     document.getElementById('loading').style.display = 'none';
